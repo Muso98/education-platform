@@ -1,0 +1,67 @@
+{% extends "ui/base.html" %}
+{% block title %}Login — eLEARNING{% endblock %}
+{% block nav_pages_active %}active{% endblock %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container-xxl py-5">
+  <div class="container" style="max-width:560px;">
+    <h1 class="mb-4 text-center">Login</h1>
+
+    <form method="post" class="bg-white p-4 rounded shadow-sm" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {# Username #}
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {% if form.username.errors %}
+          {{ form.username|add_class:"form-control is-invalid"|attr:"autocomplete:username"|attr:"autofocus:true" }}
+          <div class="invalid-feedback">
+            {{ form.username.errors|join:", " }}
+          </div>
+        {% else %}
+          {{ form.username|add_class:"form-control"|attr:"autocomplete:username"|attr:"autofocus:true" }}
+        {% endif %}
+      </div>
+
+      {# Password #}
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {% if form.password.errors %}
+          {{ form.password|add_class:"form-control is-invalid"|attr:"autocomplete:current-password" }}
+          <div class="invalid-feedback">
+            {{ form.password.errors|join:", " }}
+          </div>
+        {% else %}
+          {{ form.password|add_class:"form-control"|attr:"autocomplete:current-password" }}
+        {% endif %}
+        <div class="form-text">
+          <a href="{% url 'password_reset' %}">Forgot password?</a>
+        </div>
+      </div>
+
+      {# Remember me (ixtiyoriy) #}
+      <div class="mb-3 form-check">
+        <input class="form-check-input" type="checkbox" name="remember" id="remember">
+        <label class="form-check-label" for="remember">Remember me</label>
+      </div>
+
+      {# next param bo'lsa, saqlaymiz #}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <button class="btn btn-primary w-100">Login</button>
+    </form>
+
+    <p class="text-center mt-3">
+      Account yo‘qmi? <a href="{% url 'register' %}">Register</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

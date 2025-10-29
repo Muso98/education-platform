@@ -1,0 +1,113 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Testimonial — eLEARNING{% endblock %}
+{% block nav_pages_active %}active{% endblock %}
+{% block nav_testimonial_active %}active{% endblock %}
+
+{% block content %}
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 text-center">
+        <h1 class="display-3 text-white animated slideInDown">Testimonial</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-center">
+            <li class="breadcrumb-item"><a class="text-white" href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><span class="text-white-50">Pages</span></li>
+            <li class="breadcrumb-item text-white active" aria-current="page">Testimonial</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+  <div class="container">
+    {# flash messages #}
+    {% if messages %}
+      <div class="mb-3">
+        {% for m in messages %}
+          <div class="alert alert-{{ m.tags|default:'info' }} mb-2">{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="text-center">
+      <h6 class="section-title bg-white text-center text-primary px-3">Testimonial</h6>
+      <h1 class="mb-5">Our Students Say!</h1>
+    </div>
+
+    {% if items %}
+      <div class="owl-carousel testimonial-carousel position-relative">
+        {% for t in items %}
+          <div class="testimonial-item text-center">
+            {% if t.photo %}
+              <img class="border rounded-circle p-2 mx-auto mb-3"
+                   src="{{ t.photo.url }}" alt="{{ t.full_name }}"
+                   style="width:80px;height:80px;object-fit:cover;">
+            {% else %}
+              <img class="border rounded-circle p-2 mx-auto mb-3"
+                   src="{% static 'img/testimonial-1.jpg' %}" alt="User"
+                   style="width:80px;height:80px;object-fit:cover;">
+            {% endif %}
+            <h5 class="mb-0">{{ t.full_name }}</h5>
+            {% if t.role %}<p class="text-muted small mb-2">{{ t.role }}</p>{% endif %}
+            <div class="testimonial-text bg-light text-center p-4 rounded">
+              <p class="mb-0">{{ t.quote|linebreaks }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info text-center">Hozircha sharhlar qo‘shilmagan.</div>
+    {% endif %}
+
+    {# ------ Yangi izoh yuborish formasi ------ #}
+    <div class="row justify-content-center mt-5">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">Fikringizni qoldiring</h5>
+            <small class="text-muted">Fikringiz moderatsiyadan so‘ng sahifada ko‘rinadi.</small>
+          </div>
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Ism Familiya</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Roli (ixtiyoriy)</label>
+                {{ form.role }}
+                {% if form.role.errors %}<div class="text-danger small">{{ form.role.errors }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Fikr matni</label>
+                {{ form.quote }}
+                {% if form.quote.errors %}<div class="text-danger small">{{ form.quote.errors }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Surat (ixtiyoriy)</label>
+                {{ form.photo }}
+                {% if form.photo.errors %}<div class="text-danger small">{{ form.photo.errors }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Baholash (1–5)</label>
+                {{ form.rating }}
+                {% if form.rating.errors %}<div class="text-danger small">{{ form.rating.errors }}</div>{% endif %}
+              </div>
+              <button type="submit" class="btn btn-primary">Yuborish</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {# ------ /forma ------ #}
+
+  </div>
+</div>
+{% endblock %}

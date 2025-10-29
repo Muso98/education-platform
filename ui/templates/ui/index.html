@@ -1,0 +1,188 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Bosh sahifa — eLEARNING{% endblock %}
+{% block nav_home_active %}active{% endblock %}
+
+{% block content %}
+
+<!-- === SLIDER (STATIK QOLADI) === -->
+<div class="container-fluid p-0 mb-5">
+  <div class="owl-carousel header-carousel position-relative">
+    <div class="owl-carousel-item position-relative">
+      <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
+      <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24,29,56,.7);">
+        <div class="container">
+          <div class="row justify-content-start">
+            <div class="col-sm-10 col-lg-8">
+              <h5 class="text-primary text-uppercase mb-3 animated slideInDown">Eng yaxshi onlayn kurslar</h5>
+              <h1 class="display-3 text-white animated slideInDown">O‘zingiz uchun bilim oling</h1>
+              <p class="fs-5 text-white mb-4 pb-2">Zamonaviy ta’lim imkoniyatlari sizning qo‘lingizda.</p>
+              <a href="{% url 'courses' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Kurslarni ko‘rish</a>
+              <a href="{% url 'register' %}" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Ro‘yxatdan o‘tish</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="owl-carousel-item position-relative">
+      <img class="img-fluid" src="{% static 'img/carousel-2.jpg' %}" alt="">
+      <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24,29,56,.7);">
+        <div class="container">
+          <div class="row justify-content-start">
+            <div class="col-sm-10 col-lg-8">
+              <h5 class="text-primary text-uppercase mb-3 animated slideInDown">Sifatli ta’lim</h5>
+              <h1 class="display-3 text-white animated slideInDown">Uydan chiqmasdan o‘rganing</h1>
+              <p class="fs-5 text-white mb-4 pb-2">Kurslar, testlar va topshiriqlar — barchasi onlayn.</p>
+              <a href="{% url 'about' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Batafsil</a>
+              <a href="{% url 'courses' %}" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Boshlash</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- === SLIDER END === -->
+
+
+<!-- === KATEGORIYALAR === -->
+<div class="container-xxl py-5 category">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">Kategoriyalar</h6>
+      <h1 class="mb-5">Kurs yo‘nalishlari</h1>
+    </div>
+
+    <div class="row g-3">
+      {% for cat in categories %}
+      <div class="col-lg-6 col-md-6 wow zoomIn" data-wow-delay="{{ forloop.counter0|add:'1' }}00ms">
+        <a class="position-relative d-block overflow-hidden" href="{% url 'courses' %}?category={{ cat.slug }}">
+          {% if cat.image %}
+            <img class="img-fluid" src="{{ cat.image.url }}" alt="{{ cat.name }}">
+          {% else %}
+            <img class="img-fluid" src="{% static 'img/cat-1.jpg' %}" alt="{{ cat.name }}">
+          {% endif %}
+          <div class="bg-white text-center position-absolute bottom-0 end-0 py-2 px-3" style="margin:1px;">
+            <h5 class="m-0">{{ cat.name }}</h5>
+            <small class="text-primary">{{ cat.total }} ta kurs</small>
+          </div>
+        </a>
+      </div>
+      {% empty %}
+      <p class="text-center text-muted">Kategoriyalar hali qo‘shilmagan.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- === KATEGORIYALAR END === -->
+
+
+<!-- === OMMABOP KURSLAR === -->
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">Kurslar</h6>
+      <h1 class="mb-5">Mashhur kurslar</h1>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      {% for c in featured_courses %}
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="{{ forloop.counter0|add:'1' }}00ms">
+        <div class="course-item bg-light">
+          <div class="position-relative overflow-hidden">
+            {% if c.image %}
+              <img class="img-fluid" src="{{ c.image.url }}" alt="{{ c.title }}">
+            {% else %}
+              <img class="img-fluid" src="{% static 'img/course-1.jpg' %}" alt="{{ c.title }}">
+            {% endif %}
+            <div class="w-100 d-flex justify-content-center position-absolute bottom-0 start-0 mb-4">
+              <a href="{% url 'course_detail' c.slug %}" class="btn btn-sm btn-primary px-3 border-end" style="border-radius:30px 0 0 30px;">Batafsil</a>
+              <a href="{% url 'course_learn' c.slug %}" class="btn btn-sm btn-primary px-3" style="border-radius:0 30px 30px 0;">Boshlash</a>
+            </div>
+          </div>
+          <div class="text-center p-4 pb-0">
+            <h3 class="mb-0">{{ c.title }}</h3>
+          </div>
+          <div class="d-flex border-top">
+            <small class="flex-fill text-center border-end py-2"><i class="fa fa-user-tie text-primary me-2"></i>{{ c.instructor.full_name }}</small>
+            <small class="flex-fill text-center border-end py-2"><i class="fa fa-clock text-primary me-2"></i>{{ c.duration_minutes|default:60 }} daqiqa</small>
+            <small class="flex-fill text-center py-2"><i class="fa fa-user text-primary me-2"></i>30+</small>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center text-muted">Hozircha kurslar mavjud emas.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- === KURSLAR END === -->
+
+
+<!-- === O‘QITUVCHILAR === -->
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">O‘qituvchilar</h6>
+      <h1 class="mb-5">Tajribali instruktorlar</h1>
+    </div>
+
+    <div class="row g-4">
+      {% for t in instructors %}
+      <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="{{ forloop.counter0|add:'1' }}00ms">
+        <div class="team-item bg-light">
+          <div class="overflow-hidden">
+            {% if t.photo %}
+              <img class="img-fluid" src="{{ t.photo.url }}" alt="{{ t.full_name }}">
+            {% else %}
+              <img class="img-fluid" src="{% static 'img/team-1.jpg' %}" alt="{{ t.full_name }}">
+            {% endif %}
+          </div>
+          <div class="text-center p-4">
+            <h5 class="mb-0">{{ t.full_name }}</h5>
+            <small>{{ t.title }}</small>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center text-muted">O‘qituvchilar hali qo‘shilmagan.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- === TEAM END === -->
+
+
+<!-- === TESTIMONIAL === -->
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+  <div class="container">
+    <div class="text-center">
+      <h6 class="section-title bg-white text-center text-primary px-3">Talabalar fikri</h6>
+      <h1 class="mb-5">Izohlar</h1>
+    </div>
+
+    <div class="owl-carousel testimonial-carousel position-relative">
+      {% for x in testimonials %}
+      <div class="testimonial-item text-center">
+        {% if x.photo %}
+          <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ x.photo.url }}" style="width:80px;height:80px;object-fit:cover;">
+        {% else %}
+          <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-1.jpg' %}" style="width:80px;height:80px;">
+        {% endif %}
+        <h5 class="mb-0">{{ x.full_name }}</h5>
+        <p>{{ x.profession }}</p>
+        <div class="testimonial-text bg-light text-center p-4">
+          <p class="mb-0">{{ x.text }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center text-muted">Hozircha izohlar yo‘q.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- === TESTIMONIAL END === -->
+
+{% endblock %}

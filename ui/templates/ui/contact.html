@@ -1,0 +1,171 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Aloqa — eLEARNING{% endblock %}
+{% block nav_contact_active %}active{% endblock %}
+
+{% block content %}
+
+<!-- Sarlavha -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 text-center">
+        <h1 class="display-3 text-white animated slideInDown">Aloqa</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-center">
+            <li class="breadcrumb-item"><a class="text-white" href="{% url 'home' %}">Bosh sahifa</a></li>
+            <li class="breadcrumb-item"><a class="text-white" href="#">Sahifalar</a></li>
+            <li class="breadcrumb-item text-white active" aria-current="page">Aloqa</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Aloqa -->
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">Aloqa</h6>
+      <h1 class="mb-5">Savollaringiz bo‘lsa yozing</h1>
+    </div>
+
+    {% if messages %}
+      <div class="row mb-3">
+        <div class="col-12">
+          {% for m in messages %}
+            <div class="alert alert-{{ m.tags|default:'info' }} mb-2">{{ m }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+      <!-- Manzil/telefon/email -->
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+        <h5>Bog‘lanish ma’lumotlari</h5>
+        <p class="mb-4">
+          Kontakt formasi Django orqali ishlaydi. Rivojlantirish rejimida xabarlar konsolga yoziladi
+          yoki sozlangan emailingizga yuboriladi.
+        </p>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="d-flex align-items-center justify-content-center flex-shrink-0 bg-primary" style="width:50px;height:50px;">
+            <i class="fa fa-map-marker-alt text-white"></i>
+          </div>
+          <div class="ms-3">
+            <h5 class="text-primary">Ofis</h5>
+            <p class="mb-0">Toshkent, O‘zbekiston</p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="d-flex align-items-center justify-content-center flex-shrink-0 bg-primary" style="width:50px;height:50px;">
+            <i class="fa fa-phone-alt text-white"></i>
+          </div>
+          <div class="ms-3">
+            <h5 class="text-primary">Telefon</h5>
+            <p class="mb-0">+998 (00) 000-00-00</p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <div class="d-flex align-items-center justify-content-center flex-shrink-0 bg-primary" style="width:50px;height:50px;">
+            <i class="fa fa-envelope-open text-white"></i>
+          </div>
+          <div class="ms-3">
+            <h5 class="text-primary">Email</h5>
+            <p class="mb-0">info@example.com</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TATU xaritasi -->
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+        <iframe
+          class="position-relative rounded w-100 h-100"
+          title="TATU xaritasi"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          style="min-height:300px;border:0;"
+          allowfullscreen
+          src="https://www.google.com/maps?q=Muhammad%20al-Xorazmiy%20nomidagi%20Toshkent%20axborot%20texnologiyalari%20universiteti&output=embed&hl=uz">
+        </iframe>
+      </div>
+
+      <!-- Forma -->
+      <div class="col-lg-4 col-md-12 wow fadeInUp" data-wow-delay="0.5s">
+        {% if sent %}
+          <div class="alert alert-success">Xabar yuborildi! Rahmat.</div>
+        {% elif error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'contact' %}" id="contactForm" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="name" name="name"
+                       placeholder="Ismingiz" required autocomplete="name"
+                       value="{{ request.POST.name|default_if_none:'' }}">
+                <label for="name">Ismingiz</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="email" class="form-control" id="email" name="email"
+                       placeholder="Email" required autocomplete="email"
+                       value="{{ request.POST.email|default_if_none:'' }}">
+                <label for="email">Email</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="subject" name="subject"
+                       placeholder="Mavzu" required
+                       value="{{ request.POST.subject|default_if_none:'' }}">
+                <label for="subject">Mavzu</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-floating">
+                <textarea class="form-control" id="message" name="message"
+                          placeholder="Xabaringizni yozing" style="height:150px" required>{{ request.POST.message|default_if_none:'' }}</textarea>
+                <label for="message">Xabaringiz</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button class="btn btn-primary w-100 py-3" type="submit" id="submitBtn">
+                Xabarni yuborish
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const form = document.getElementById('contactForm');
+  const btn  = document.getElementById('submitBtn');
+  if (!form || !btn) return;
+  form.addEventListener('submit', function(){
+    btn.disabled = true;
+    btn.textContent = 'Yuborilmoqda...';
+  });
+})();
+</script>
+{% endblock %}

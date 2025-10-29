@@ -1,0 +1,163 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% block title %}Kutubxona — eLEARNING{% endblock %}
+{% block nav_library_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  .library-card{padding:1.5rem;border-radius:1rem}
+  .library-card h5{font-size:1.1rem}
+  .library-card .thumb{
+    width:72px;height:72px;object-fit:cover;border-radius:10px
+  }
+  @media (min-width:1200px){
+    .library-card{padding:2rem}
+    .library-card h5{font-size:1.25rem}
+    .library-card .thumb{width:84px;height:84px}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+  <div class="container py-5 text-center">
+    <h1 class="display-3 text-white">Kutubxona</h1>
+  </div>
+</div>
+
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-4">
+      {% for it in items %}
+      <div class="col-sm-6 col-lg-6 col-xl-4">
+        <div class="bg-light d-flex align-items-start justify-content-between library-card h-100">
+          <div class="me-3">
+            <h5 class="mb-1">{{ it.title }}</h5>
+            <div class="text-muted small mb-3">
+              {% if it.display_creator %}{{ it.display_creator }} · {% endif %}
+              {% if it.display_year %}{{ it.display_year }}{% endif %}
+              {% if it.standard %} · {{ it.standard }}{% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button"
+                      class="btn btn-sm btn-primary"
+                      data-bs-toggle="modal"
+                      data-bs-target="#previewModal"
+                      data-file-url="{{ it.href }}"
+                      data-title="{{ it.title|escape }}"
+                      aria-label="Faylni ochish: {{ it.title }}">
+                Ochish
+              </button>
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{{ it.href }}" download
+                 aria-label="Yuklab olish: {{ it.title }}">
+                Yuklab olish
+              </a>
+            </div>
+          </div>
+
+          {% if it.thumb %}
+            <img src="{{ it.thumb.url }}" alt="Muqova — {{ it.title }}" class="thumb">
+          {% else %}
+            <i class="bi bi-journal-text fs-1 text-primary" aria-hidden="true"></i>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+        <p class="text-center">Hozircha hech qanday resurs yo‘q.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# ==== PREVIEW MODAL ==== #}
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true" aria-labelledby="previewTitle">
+  <div class="modal-dialog modal-fullscreen-xl-down modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="previewTitle">Faylni ko‘rish</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
+      </div>
+
+      <div class="modal-body p-0" style="height: calc(100vh - 130px);">
+        <iframe id="libPreviewFrame"
+                class="w-100 h-100 border-0"
+                style="border-radius:0;"
+                title="Kutubxona fayli previewi"
+                allowfullscreen></iframe>
+      </div>
+
+      <div class="modal-footer justify-content-between bg-light">
+        <div class="small text-muted">
+          <i class="bi bi-info-circle me-1"></i> Faylni yangi oynada ochish yoki yuklab olish mumkin.
+        </div>
+        <div class="d-flex gap-2">
+          <a id="libOpenNewTab" class="btn btn-primary" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Yangi oynada ochish
+          </a>
+          <a id="libDownload" class="btn btn-outline-secondary" download>
+            <i class="bi bi-download me-1"></i> Yuklab olish
+          </a>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Yopish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const modal = document.getElementById('previewModal');
+  const frame = document.getElementById('libPreviewFrame');
+  const aOpen = document.getElementById('libOpenNewTab');
+  const aDown = document.getElementById('libDownload');
+  const titleEl = document.getElementById('previewTitle');
+
+  function toAbsolute(url) {
+    try { return new URL(url, window.location.origin).href; }
+    catch (_) { return url; }
+  }
+  function extOf(url) {
+    const u = url.split('?')[0].split('#')[0];
+    return (u.slice(u.lastIndexOf('.') + 1) || '').toLowerCase();
+  }
+  function officeEmbed(absUrl) {
+    return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(absUrl);
+  }
+
+  modal.addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget;
+    if (!btn) return;
+
+    const fileUrl = btn.getAttribute('data-file-url') || '#';
+    const absUrl = toAbsolute(fileUrl);
+    const ex = extOf(absUrl);
+
+    // Sarlavha
+    const t = btn.getAttribute('data-title') || 'Faylni ko‘rish';
+    titleEl.textContent = t;
+
+    // Havolalar
+    aOpen.href = absUrl;
+    aDown.href = absUrl;
+
+    // Preview strategiyasi
+    const officeExts = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+    if (ex === 'pdf') {
+      frame.src = absUrl + '#toolbar=1&view=fitH';
+    } else if (officeExts.includes(ex)) {
+      frame.src = officeEmbed(absUrl);
+    } else {
+      frame.src = 'about:blank'; // jpg/png/txt/zip va boshqalar uchun — yangi oynada ochish qulay
+    }
+  });
+
+  modal.addEventListener('hidden.bs.modal', function () {
+    frame.src = 'about:blank';
+  });
+})();
+</script>
+{% endblock %}

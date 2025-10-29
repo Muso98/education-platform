@@ -1,0 +1,27 @@
+{% extends "ui/base.html" %}
+{% block title %}Yangi Torrens testi{% endblock %}
+{% block nav_torrens_active %}active{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-3">Yangi Torrens testi</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="card mb-3">
+      <div class="card-body">
+        {{ form.as_p }}
+      </div>
+    </div>
+    <h5>Topshiriqlar</h5>
+    {{ formset.management_form }}
+    {% for f in formset %}
+      <div class="card mb-3">
+        <div class="card-body">
+          {{ f.as_p }}
+        </div>
+      </div>
+    {% endfor %}
+
+    <button class="btn btn-primary">Saqlash</button>
+  </form>
+</div>
+{% endblock %}

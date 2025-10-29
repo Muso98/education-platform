@@ -1,0 +1,33 @@
+{% extends "ui/base.html" %}
+{% block title %}Torrens testlar{% endblock %}
+{% block nav_torrens_active %}active{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">Torrens testlar</h2>
+    {% if request.user.is_staff %}
+      <a class="btn btn-success" href="{% url 'torrens_create' %}">+ Yangi test</a>
+    {% endif %}
+  </div>
+
+  {% if tests %}
+    <div class="list-group">
+      {% for t in tests %}
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+           href="{% url 'torrens_detail' t.slug %}">
+          <div>
+            <div class="fw-semibold">{{ t.title }}</div>
+            {% if t.description %}<div class="small text-muted">{{ t.description|truncatechars:120 }}</div>{% endif %}
+          </div>
+          <span class="badge bg-{{ t.is_published|yesno:'success,secondary' }}">
+            {{ t.is_published|yesno:"E'lon qilingan,Chop etilmagan" }}
+          </span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">Hozircha testlar yo‘q.</div>
+  {% endif %}
+</div>
+{% endblock %}

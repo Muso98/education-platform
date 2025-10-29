@@ -1,0 +1,10 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ course.title }} — Learn{% endblock %}
+{% block nav_courses_active %}active{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-3">{{ course.title }}</h2>
+  <p class="text-muted">Lessons are not added yet.</p>
+  <a href="{% url 'course_detail' course.slug %}" class="btn btn-outline-primary">Back</a>
+</div>
+{% endblock %}

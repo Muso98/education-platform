@@ -1,0 +1,176 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Kurslar — eLEARNING{% endblock %}
+{% block nav_courses_active %}active{% endblock %}
+
+{% block content %}
+
+{# — Fallback rasmlar: extendsdan keyin faqat blok ichida bo‘lishi shart! — #}
+{% static 'img/cat-1.jpg' as CAT1 %}
+{% static 'img/cat-2.jpg' as CAT2 %}
+{% static 'img/cat-3.jpg' as CAT3 %}
+{% static 'img/cat-4.jpg' as CAT4 %}
+{% static 'img/course-1.jpg' as COURSE1 %}
+{% static 'img/course-2.jpg' as COURSE2 %}
+{% static 'img/course-3.jpg' as COURSE3 %}
+
+<!-- Sarlavha -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+  <div class="container py-5 text-center">
+    <h1 class="display-3 text-white animated slideInDown">Kurslar</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb justify-content-center">
+        <li class="breadcrumb-item"><a class="text-white" href="{% url 'home' %}">Bosh sahifa</a></li>
+        <li class="breadcrumb-item text-white active" aria-current="page">Kurslar</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<!-- Toifalar va Filtr -->
+<div class="container-xxl py-5 category">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">Toifalar</h6>
+      <h1 class="mb-5">Kurs toifalari</h1>
+    </div>
+
+    <!-- Filtrlash paneli -->
+    <form method="get" class="row g-3 mb-4">
+      <div class="col-md-4">
+        <input type="text" name="q" class="form-control" placeholder="Kurs yoki o‘qituvchi bo‘yicha qidirish..." value="{{ q|default:'' }}">
+      </div>
+      <div class="col-md-3">
+        <select name="category" class="form-select">
+          <option value="">Barcha toifalar</option>
+          {% for c in categories %}
+            <option value="{{ c.slug }}" {% if active_category == c.slug %}selected{% endif %}>
+              {{ c.name }} ({{ c.total|default:0 }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="order" class="form-select">
+          <option value="-created_at" {% if order == "-created_at" %}selected{% endif %}>Yangi qo‘shilganlar</option>
+          <option value="price" {% if order == "price" %}selected{% endif %}>Narx: arzon → qimmat</option>
+          <option value="-price" {% if order == "-price" %}selected{% endif %}>Narx: qimmat → arzon</option>
+          <option value="-rating" {% if order == "-rating" %}selected{% endif %}>Eng yuqori reyting</option>
+          <option value="title" {% if order == "title" %}selected{% endif %}>Nom: A → Z</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary">Qo‘llash</button>
+      </div>
+    </form>
+
+    <!-- Toifalar -->
+    <div class="row g-3 mb-5">
+      {% for c in categories|slice:":4" %}
+        {% cycle CAT1 CAT2 CAT3 CAT4 as CAT_FALL silent %}
+        <div class="col-lg-6 col-md-12 wow zoomIn" data-wow-delay="0.{{ forloop.counter }}s">
+          {# Birinchi kursga “to‘g‘ridan” o‘tish o‘rniga filtr sahifasiga yo‘naltiramiz (xavfsiz va izchil) #}
+          <a class="position-relative d-block overflow-hidden"
+             href="{% url 'courses' %}?category={{ c.slug }}{% if q %}&q={{ q }}{% endif %}{% if order %}&order={{ order }}{% endif %}">
+            {% if c.image %}
+              <img class="img-fluid" src="{{ c.image.url }}" alt="{{ c.name }}">
+            {% else %}
+              <img class="img-fluid" src="{{ CAT_FALL }}" alt="{{ c.name }}">
+            {% endif %}
+            <div class="bg-white text-center position-absolute bottom-0 end-0 py-2 px-3" style="margin:1px;">
+              <h5 class="m-0">{{ c.name }}</h5>
+              <small class="text-primary">{{ c.total|default:0 }} ta kurs</small>
+            </div>
+          </a>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center text-muted">Hozircha toifalar mavjud emas.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Kurslar ro‘yxati -->
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+      <h6 class="section-title bg-white text-center text-primary px-3">Kurslar</h6>
+      <h1 class="mb-5">Mashhur kurslar</h1>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      {% for course in page_obj %}
+        {% cycle COURSE1 COURSE2 COURSE3 as COURSE_FALL silent %}
+        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.{{ forloop.counter }}s">
+          <div class="course-item bg-light h-100 d-flex flex-column position-relative">
+            <div class="position-relative overflow-hidden">
+              {% if course.image %}
+                <img class="img-fluid" src="{{ course.image.url }}" alt="{{ course.title }}">
+              {% else %}
+                <img class="img-fluid" src="{{ COURSE_FALL }}" alt="{{ course.title }}">
+              {% endif %}
+              <div class="w-100 d-flex justify-content-center position-absolute bottom-0 start-0 mb-4">
+                <a href="{% url 'course_detail' course.slug %}"
+                   class="flex-shrink-0 btn btn-sm btn-primary px-3 border-end"
+                   style="border-radius:30px 0 0 30px;">Batafsil</a>
+                <a href="{% url 'course_learn' course.slug %}"
+                   class="flex-shrink-0 btn btn-sm btn-primary px-3"
+                   style="border-radius:0 30px 30px 0;">Kirish</a>
+              </div>
+            </div>
+
+            <div class="text-center p-4 pb-0">
+              <h3 class="mb-0">{{ course.title }}</h3>
+              <div class="mb-3">
+                {% for _ in "12345" %}<small class="fa fa-star text-primary"></small>{% endfor %}
+                <small>({{ course.rating|default:"0.0" }})</small>
+              </div>
+            </div>
+
+            <div class="d-flex border-top mt-auto">
+              <small class="flex-fill text-center border-end py-2">
+                <i class="fa fa-user-tie text-primary me-2"></i>{{ course.instructor.full_name|default:"O‘qituvchi" }}
+              </small>
+              <small class="flex-fill text-center border-end py-2">
+                <i class="fa fa-clock text-primary me-2"></i>{{ course.duration_hours|default:"—" }} soat
+              </small>
+              <small class="flex-fill text-center py-2">
+                <i class="fa fa-user text-primary me-2"></i>{{ course.students_count|default:0 }} talaba
+              </small>
+            </div>
+
+            <a href="{% url 'course_learn' course.slug %}" class="stretched-link" aria-label="{{ course.title }}"></a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center text-muted">Hech qanday kurs topilmadi.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Sahifalash -->
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="mt-4" aria-label="Kurslar sahifalash">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Oldingi</a>
+            </li>
+          {% endif %}
+          {% for p in page_obj.paginator.page_range %}
+            <li class="page-item {% if p == page_obj.number %}active{% endif %}">
+              <a class="page-link" href="?page={{ p }}{% if q %}&q={{ q }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Keyingi</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

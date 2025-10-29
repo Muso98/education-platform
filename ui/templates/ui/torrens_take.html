@@ -1,0 +1,287 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}{{ test.title }} — Torrens topshirish{% endblock %}
+{% block nav_torrens_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  .draw-wrap{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff}
+  .draw-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.5rem;border-bottom:1px solid #eee;background:#fafafa}
+  .draw-canvas-holder{position:relative;width:100%;max-width:900px;margin:0 auto;min-height:320px}
+  .draw-canvas{width:100%;height:auto;display:block;touch-action:none}
+  .chip{padding:.25rem .5rem;border-radius:9999px;background:#eef2ff;font-size:.8rem}
+  .tool-input{width:80px}
+  @media (max-width:576px){.tool-input{width:64px}}
+  .img-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+  @media(min-width:768px){.img-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .thumb{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb}
+  .hint{font-size:.9rem;color:#6b7280}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-2">{{ test.title }}</h3>
+  {% if test.description %}<p class="text-muted">{{ test.description }}</p>{% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="torrensForm">
+    {% csrf_token %}
+
+    {% for task in test.tasks.all %}
+      {# Foydali flaglar: modelda bo‘lmasa ham xatosiz ishlaydi #}
+      {% with
+         at=task.allow_text|default_if_none:None
+         ai=task.allow_images|default_if_none:None
+         mx=task.max_images|default_if_none:None
+      %}
+      {% with show_text=at|default:task.response_type == "text" %}
+      {% with show_list=task.response_type == "list" %}
+      {% with show_draw=task.response_type == "drawing" %}
+      {% with show_imgs=ai|default:show_draw %}
+      {% with max_imgs=mx|default:5 %}
+
+      <div class="mb-4">
+        <div class="d-flex align-items-center mb-1">
+          <span class="chip me-2">#{{ forloop.counter }}</span>
+          <strong>Vazifa:</strong>
+        </div>
+        <div class="mb-2">{{ task.prompt|linebreaks }}</div>
+        {% if task.hint %}<div class="hint mb-2">{{ task.hint }}</div>{% endif %}
+        {% if task.reference_image %}
+          <div class="mb-2">
+            <img src="{{ task.reference_image.url }}" alt="Reference" class="thumb" style="max-width:220px">
+          </div>
+        {% endif %}
+
+        {# ——— MATN (ERKIN JAVOB) ——— #}
+        {% if show_text %}
+          <label class="form-label fw-semibold">Matnli javob</label>
+          <textarea class="form-control mb-3" rows="4"
+                    name="task_{{ task.id }}_text"
+                    placeholder="Javobingizni kiriting..."></textarea>
+        {% endif %}
+
+        {# ——— RO‘YXAT KO‘RINISHIDAGI G‘OYALAR ——— #}
+        {% if show_list %}
+          <label class="form-label fw-semibold">G‘oyalar ro‘yxati</label>
+          <textarea class="form-control mb-3" rows="5"
+                    name="task_{{ task.id }}_list"
+                    placeholder="Har bir g‘oyani yangi qatordan yozing..."></textarea>
+        {% endif %}
+
+        {# ——— CHIZISH (FABRIC.JS) ——— #}
+        {% if show_draw %}
+          <div class="draw-wrap mb-3" data-task-id="{{ task.id }}">
+            <div class="draw-toolbar">
+              <div class="me-2 small text-muted">Chizish asboblari</div>
+              <label class="small mb-0 d-flex align-items-center gap-1">
+                Rang
+                <input type="color" class="form-control form-control-color tool-color" value="#111111" title="Chizish rangi">
+              </label>
+              <label class="small mb-0 d-flex align-items-center gap-1">
+                Qalinlik
+                <input type="number" class="form-control form-control-sm tool-input tool-width" min="1" max="40" value="3">
+              </label>
+              <button type="button" class="btn btn-sm btn-outline-secondary btn-undo">Undo</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary btn-redo">Redo</button>
+              <button type="button" class="btn btn-sm btn-outline-danger btn-clear">Tozalash</button>
+              <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="small text-muted d-none d-sm-inline">Fon</span>
+                <button type="button" class="btn btn-sm btn-outline-primary btn-fit">Sig‘dirish</button>
+              </div>
+            </div>
+
+            <div class="p-2 draw-canvas-holder">
+              <canvas id="fabric_canvas_{{ task.id }}" class="draw-canvas"></canvas>
+              {% if task.reference_image %}
+                <img src="{{ task.reference_image.url }}" class="d-none" id="refimg_{{ task.id }}" alt="reference">
+              {% endif %}
+            </div>
+
+            <!-- PNG dataURL shu yerga yoziladi -->
+            <input type="hidden" name="task_{{ task.id }}_fabric_png" class="fabric-output">
+          </div>
+        {% endif %}
+
+        {# ——— KO‘P RASM YUKLASH ——— #}
+        {% if show_imgs %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Rasmlar (maks. {{ max_imgs }}) — PNG/JPG
+            </label>
+            <input type="file"
+                   name="task_{{ task.id }}_images"
+                   accept="image/*"
+                   class="form-control"
+                   multiple
+                   data-preview="#pre_{{ task.id }}"
+                   data-max="{{ max_imgs }}">
+            <div id="pre_{{ task.id }}" class="img-grid mt-2"></div>
+          </div>
+        {% endif %}
+
+      </div>
+
+      {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
+      {% endwith %}
+    {% endfor %}
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary" name="save">Saqlash</button>
+      <button type="submit" class="btn btn-success" name="finish">Yakunlash</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Fabric.js — faqat bitta marta! (CSP bo‘yicha ruxsat borligiga ishonch hosil qiling) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+(function(){
+  const form  = document.getElementById('torrensForm');
+  const wraps = document.querySelectorAll('.draw-wrap');
+  const registry = []; // { fc, outputEl }
+
+  const debounce = (fn, ms=120) => {
+    let t; return (...args) => { clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+  };
+
+  // ====== FABRIC CANVAS BLOKI ======
+  wraps.forEach(wrap => {
+    const taskId   = wrap.dataset.taskId;
+    const canvasEl = wrap.querySelector('canvas');
+    const holder   = wrap.querySelector('.draw-canvas-holder');
+    const outputEl = wrap.querySelector('.fabric-output');
+    const colorEl  = wrap.querySelector('.tool-color');
+    const widthEl  = wrap.querySelector('.tool-width');
+    const btnUndo  = wrap.querySelector('.btn-undo');
+    const btnRedo  = wrap.querySelector('.btn-redo');
+    const btnClear = wrap.querySelector('.btn-clear');
+    const btnFit   = wrap.querySelector('.btn-fit');
+    const refImgEl = document.getElementById('refimg_' + taskId);
+
+    const fc = new fabric.Canvas(canvasEl, {
+      isDrawingMode: true,
+      backgroundColor: 'transparent',
+    });
+    fc.freeDrawingBrush = new fabric.PencilBrush(fc);
+    fc.freeDrawingBrush.color = colorEl.value || '#111111';
+    fc.freeDrawingBrush.width = parseInt(widthEl.value || 3, 10);
+
+    // Tarix (undo/redo)
+    let history = [];
+    let pointer = -1;
+    const saveState = () => {
+      history = history.slice(0, pointer + 1);
+      history.push(fc.toJSON());
+      pointer = history.length - 1;
+    };
+    const loadState = (idx) => {
+      if (idx < 0 || idx >= history.length) return;
+      fc.loadFromJSON(history[idx], () => fc.renderAll());
+    };
+    fc.on('path:created', saveState);
+
+    // O'lcham/fon
+    let bgImgObj = null;
+
+    function fitBackground(){
+      if (!bgImgObj) return;
+      const cw = fc.getWidth(), ch = fc.getHeight();
+      const iw = bgImgObj.width, ih = bgImgObj.height;
+      const scale = Math.min(cw/iw, ch/ih);
+      bgImgObj.set({
+        left: 0, top: 0,
+        originX: 'left', originY: 'top',
+        scaleX: scale, scaleY: scale,
+        selectable: false, evented: false
+      });
+      fc.setBackgroundImage(bgImgObj, fc.renderAll.bind(fc));
+    }
+
+    function resizeCanvas(){
+      const rect = holder.getBoundingClientRect();
+      if (rect.width < 10) return;
+      const h = Math.max(Math.round(rect.width * 0.66), 320);
+      fc.setWidth(rect.width);
+      fc.setHeight(h);
+      fitBackground();
+      fc.renderAll();
+    }
+    const debouncedResize = debounce(resizeCanvas, 80);
+
+    function initBackground(thenSave=true){
+      if (!refImgEl){
+        resizeCanvas();
+        if (thenSave) saveState();
+        return;
+      }
+      fabric.Image.fromURL(refImgEl.src, (img) => {
+        bgImgObj = img;
+        resizeCanvas();
+        fitBackground();
+        if (thenSave) saveState();
+      }, {crossOrigin: 'anonymous'});
+    }
+
+    // Toolbar
+    colorEl.addEventListener('input', () => {
+      fc.freeDrawingBrush.color = colorEl.value || '#111111';
+    });
+    widthEl.addEventListener('input', () => {
+      let v = parseInt(widthEl.value || 3, 10);
+      if (isNaN(v)) v = 3;
+      v = Math.min(Math.max(v, 1), 40);
+      fc.freeDrawingBrush.width = v;
+    });
+    btnUndo.addEventListener('click', () => { if (pointer > 0){ pointer -= 1; loadState(pointer); }});
+    btnRedo.addEventListener('click', () => { if (pointer < history.length - 1){ pointer += 1; loadState(pointer); }});
+    btnClear.addEventListener('click', () => { fc.clear(); if (bgImgObj){ fitBackground(); } saveState(); });
+    btnFit.addEventListener('click', fitBackground);
+
+    // Responsive
+    const ro = new ResizeObserver(debouncedResize);
+    ro.observe(holder);
+
+    registry.push({ fc, outputEl });
+    initBackground(true);
+  });
+
+  // ====== MULTI-IMAGE PREVIEW & LIMIT ======
+  document.querySelectorAll('input[type="file"][multiple][accept^="image/"]').forEach(inp=>{
+    const previewSel = inp.getAttribute('data-preview');
+    const previewBox = previewSel ? document.querySelector(previewSel) : null;
+    const max = parseInt(inp.getAttribute('data-max') || '5', 10);
+
+    inp.addEventListener('change', ()=>{
+      if (!previewBox) return;
+      previewBox.innerHTML = '';
+      const files = Array.from(inp.files || []);
+      if (files.length > max) {
+        alert(`Maksimal ${max} ta rasm tanlang! Ortiqchasini olib tashlang.`);
+      }
+      files.slice(0, max).forEach(file=>{
+        const url = URL.createObjectURL(file);
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'thumb';
+        img.onload = ()=> URL.revokeObjectURL(url);
+        previewBox.appendChild(img);
+      });
+    });
+  });
+
+  // ====== Submit: Fabric canvaskarni PNG ga aylantirish ======
+  form.addEventListener('submit', function(){
+    registry.forEach(({fc, outputEl}) => {
+      const dataURL = fc.toDataURL({ format: 'png', multiplier: 2 });
+      outputEl.value = dataURL;
+    });
+  });
+})();
+</script>
+{% endblock %}

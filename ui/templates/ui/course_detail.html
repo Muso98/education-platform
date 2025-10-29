@@ -1,0 +1,107 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title }} — eLEARNING{% endblock %}
+{% block nav_courses_active %}active{% endblock %}
+
+{% static 'img/course-1.jpg' as COURSE_FALL %}
+
+{% block content %}
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-5">
+      <!-- Rasm -->
+      <div class="col-lg-6">
+        <div class="position-relative">
+          <img class="img-fluid w-100 rounded"
+               src="{% if course.image %}{{ course.image.url }}{% else %}{{ COURSE_FALL }}{% endif %}"
+               alt="{{ course.title }}">
+        </div>
+      </div>
+
+      <!-- Asosiy ma'lumotlar -->
+      <div class="col-lg-6">
+        <h1 class="mb-3">{{ course.title }}</h1>
+
+        <div class="d-flex align-items-center mb-3">
+          <span class="me-3 text-primary fw-semibold">
+            ${{ course.price|default:"0.00" }}
+          </span>
+
+          {# Reyting yulduzlari (0–5) #}
+          {% with r=course.rating|default:0 %}
+            {% with rounded=r|floatformat:0 %}
+              <div aria-label="Reyting">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= rounded %}
+                    <small class="fa fa-star text-primary"></small>
+                  {% else %}
+                    <small class="fa fa-star text-secondary"></small>
+                  {% endif %}
+                {% endfor %}
+                <small>({{ r }})</small>
+              </div>
+            {% endwith %}
+          {% endwith %}
+        </div>
+
+        <p class="text-muted">
+          {{ course.short_desc|default:"Ushbu kurs haqida qisqacha ma’lumot hozircha kiritilmagan." }}
+        </p>
+
+        <ul class="list-unstyled mb-4">
+          <li class="mb-2">
+            <i class="fa fa-user-tie text-primary me-2"></i>
+            {{ course.instructor.full_name|default:"O‘qituvchi" }}
+          </li>
+          <li class="mb-2">
+            <i class="fa fa-clock text-primary me-2"></i>
+            {{ course.duration_hours|default:"—" }} soat
+          </li>
+          <li class="mb-2">
+            <i class="fa fa-user text-primary me-2"></i>
+            {{ course.students_count|default:0 }} talaba
+          </li>
+          <li class="mb-2">
+            <i class="fa fa-tag text-primary me-2"></i>
+            {{ course.category.name|default:"Kategoriya aniqlanmagan" }}
+          </li>
+        </ul>
+
+        <a href="{% url 'course_learn' course.slug %}" class="btn btn-primary me-2">Kursni boshlash</a>
+        <a href="{% url 'courses' %}" class="btn btn-outline-primary">Kurslar ro‘yxati</a>
+      </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Batafsil va o‘qituvchi -->
+    <div class="row">
+      <div class="col-lg-8">
+        <h4 class="mb-3">Kurs haqida</h4>
+        {% if course.description %}
+          <div>{{ course.description|linebreaks }}</div>
+        {% else %}
+          <p class="text-muted mb-0">Kengaytirilgan tavsif hozircha mavjud emas.</p>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <div class="bg-light p-4 rounded h-100">
+          <h5 class="mb-3">O‘qituvchi</h5>
+          <p class="mb-1 fw-semibold">
+            {{ course.instructor.full_name|default:"O‘qituvchi" }}
+          </p>
+          <p class="mb-0 text-muted">
+            {% if course.instructor and course.instructor.bio %}
+              {{ course.instructor.bio }}
+            {% else %}
+              O‘qituvchi haqida ma’lumot hozircha kiritilmagan.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

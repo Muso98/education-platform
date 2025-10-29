@@ -1,0 +1,354 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% load media_extras %}
+
+{% block title %}Learn — {{ course.title }}{% endblock %}
+{% block nav_courses_active %}active{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background:#f7f8fa;">
+  <div class="container py-4">
+    <div class="row">
+      <!-- ========== Sidebar ========== -->
+      <aside class="col-lg-3 mb-4">
+        <div class="bg-white border rounded shadow-sm">
+          <div class="p-3 border-bottom">
+            <h5 class="mb-0">{{ course.title }}</h5>
+            <small class="text-muted">{{ course.instructor.full_name|default:"Instructor" }}</small>
+          </div>
+
+          <div class="p-2" style="max-height:70vh; overflow:auto;">
+            {% for s in sections %}
+              <div class="px-2 py-2">
+                <div class="d-flex align-items-center">
+                  <i class="fa fa-folder-open text-primary me-2"></i>
+                  <strong class="text-truncate">{{ s.title }}</strong>
+                </div>
+
+                <div class="list-group list-group-flush mt-2">
+                  {% for l in s.lessons.all %}
+                    <a href="{% url 'course_learn' course.slug %}?l={{ l.id }}"
+                       class="list-group-item list-group-item-action d-flex align-items-center {% if lesson and lesson.id == l.id %}active{% endif %}">
+                      {% if l.kind == 'video' %}
+                        <i class="fa fa-play-circle me-2"></i>
+                      {% elif l.kind == 'text' %}
+                        <i class="fa fa-file-alt me-2"></i>
+                      {% elif l.kind == 'pdf' %}
+                        <i class="fa fa-file-pdf me-2"></i>
+                      {% elif l.kind == 'doc' %}
+                        <i class="fa fa-file-word me-2"></i>
+                      {% elif l.kind == 'test' %}
+                        <i class="fa fa-check-circle me-2"></i>
+                      {% endif %}
+                      <span class="flex-fill text-truncate">{{ l.title }}</span>
+                      {% if l.duration_minutes %}<small class="ms-2">{{ l.duration_minutes }}m</small>{% endif %}
+                    </a>
+                  {% empty %}
+                    <span class="text-muted small px-3">No lessons</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if not forloop.last %}<hr class="my-2">{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </aside>
+
+      <!-- ========== Player ========== -->
+      <main class="col-lg-9">
+        <div class="bg-white border rounded shadow-sm">
+          <!-- Header -->
+          <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+              {% if lesson %}
+                <div class="text-uppercase small text-muted">{{ lesson.section.title }}</div>
+                <h4 class="mb-0">{{ lesson.title }}</h4>
+              {% else %}
+                <h4 class="mb-0">No lesson selected</h4>
+              {% endif %}
+            </div>
+            <div>
+              {% if prev_lesson %}
+                <a class="btn btn-outline-secondary me-2" href="{% url 'course_learn' course.slug %}?l={{ prev_lesson.id }}">
+                  <i class="bi bi-arrow-left"></i> Prev
+                </a>
+              {% endif %}
+              {% if next_lesson %}
+                <a class="btn btn-primary" href="{% url 'course_learn' course.slug %}?l={{ next_lesson.id }}">
+                  Next <i class="bi bi-arrow-right"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-3">
+            {% if not lesson %}
+              <div class="alert alert-info">This course has no lessons yet.</div>
+            {% else %}
+
+              {# ===================== 🎬 VIDEO ===================== #}
+              {% if lesson.kind == 'video' %}
+                <div class="ratio ratio-16x9 mb-3">
+
+                  {# 1) Mahalliy MP4 #}
+                  {% if lesson.video_file %}
+                    <video class="w-100 h-100"
+                           controls preload="metadata" playsinline
+                           controlsList="nodownload"
+                           style="border-radius:8px;">
+                      <source src="{{ lesson.video_file.url }}" type="video/mp4">
+                      Brauzeringiz video tegini qo‘llab-quvvatlamaydi.
+                    </video>
+
+                  {# 2) Tashqi MP4 URL #}
+                  {% elif lesson.video_url|is_mp4 %}
+                    <video class="w-100 h-100"
+                           controls preload="metadata" playsinline
+                           crossorigin="anonymous"
+                           style="border-radius:8px;">
+                      <source src="{{ lesson.video_url }}" type="video/mp4">
+                      Brauzeringiz video tegini qo‘llab-quvvatlamaydi.
+                    </video>
+
+                  {# 3) YouTube #}
+                  {% elif lesson.video_url|is_youtube %}
+                    {% with ytid=lesson.video_url|youtube_id %}
+                      {% if ytid %}
+                        <div class="ratio ratio-16x9 mb-3">
+                          <iframe
+                            src="https://www.youtube-nocookie.com/embed/{{ ytid }}?rel=0&modestbranding=1&playsinline=1"
+                            title="YouTube video player"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                            style="border:0; border-radius:8px;">
+                          </iframe>
+                        </div>
+                        <div class="text-center">
+                          <a class="btn btn-outline-primary mt-2"
+                             href="https://www.youtube.com/watch?v={{ ytid }}"
+                             target="_blank" rel="noopener">
+                            🎬 Videoni YouTube saytida tomosha qilish
+                          </a>
+                        </div>
+                      {% else %}
+                        <div class="alert alert-warning m-0">
+                          YouTube havolasi noto‘g‘ri formatda.
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+
+
+                  {# 4) Vimeo #}
+                  {% elif lesson.video_url|is_vimeo %}
+                    <iframe
+                      src="{{ lesson.video_url|safe }}"
+                      title="Vimeo player"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowfullscreen
+                      style="width:100%; height:100%; border:0; border-radius:8px;">
+                    </iframe>
+
+                  {# 5) Boshqa URL — yangi tab #}
+                  {% elif lesson.video_url %}
+                    <div class="d-flex flex-column align-items-center justify-content-center p-4 border rounded" style="min-height:280px;">
+                      <div class="mb-2">Videoni oldindan ko‘rsatib bo‘lmadi.</div>
+                      <a class="btn btn-primary" href="{{ lesson.video_url }}" target="_blank" rel="noopener">
+                        Yangi oynada ochish
+                      </a>
+                    </div>
+
+                  {% else %}
+                    <div class="alert alert-warning">Video manbasi kiritilmagan.</div>
+                  {% endif %}
+                </div>
+
+                {% if lesson.duration_minutes %}
+                  <p class="text-muted mb-0">Davomiyligi: {{ lesson.duration_minutes }} daqiqa</p>
+                {% endif %}
+
+              {# ===================== 📝 TEXT ===================== #}
+              {% elif lesson.kind == 'text' %}
+                <article class="prose" style="max-height:70vh; overflow-y:auto;">
+                  {{ lesson.text|linebreaks }}
+                </article>
+
+              {# ===================== 📄 PDF ====================== #}
+              {% elif lesson.kind == 'pdf' %}
+                {% if lesson.document_file %}
+                  <div class="player-container border mb-3" style="height:70vh; overflow:hidden; border-radius:8px;">
+                    <iframe
+                      src="{{ pdf_embed_url }}#view=fitH&toolbar=1"
+                      title="PDF lesson" width="100%" height="100%"
+                      style="border:none;"></iframe>
+                  </div>
+                  <a class="btn btn-outline-secondary" href="{{ lesson.document_file.url }}" download>
+                    Download PDF
+                  </a>
+                {% else %}
+                  <div class="alert alert-warning">PDF file not provided.</div>
+                {% endif %}
+
+              {# ===================== 🪟 DOC/DOCX ================= #}
+              {% elif lesson.kind == 'doc' %}
+                {% if lesson.document_file %}
+                  <div class="border mb-3" style="height:70vh; overflow:hidden; border-radius:8px;">
+                    {% if office_embed_url %}
+                      <iframe src="{{ office_embed_url }}" width="100%" height="100%" style="border:0;"></iframe>
+                    {% else %}
+                      <div class="alert alert-info m-0 p-3">
+                        Online preview (Office Viewer) localhost’da ishlamasligi mumkin.
+                        <a href="{{ lesson.document_file.url }}" class="ms-1">Faylni yuklab oling</a>
+                        yoki darsni PDF qilib yuklang.
+                      </div>
+                    {% endif %}
+                  </div>
+                  <a class="btn btn-outline-secondary" href="{{ lesson.document_file.url }}" download>
+                    Download Word
+                  </a>
+                {% else %}
+                  <div class="alert alert-warning">Word file not provided.</div>
+                {% endif %}
+
+              {# ===================== 🧠 TEST ===================== #}
+              {% elif lesson.kind == 'test' %}
+                {% if quiz_view and quiz_view.items %}
+                  <h5 class="mb-3">{{ lesson.test.title|default:"Test" }}</h5>
+
+                  {% if lesson.test.time_limit_seconds %}
+                    <div class="alert alert-secondary py-2">
+                      Vaqt limiti: {{ lesson.test.time_limit_seconds }} soniya.
+                    </div>
+                  {% endif %}
+
+                  {% if quiz_view.locked %}
+                    <div class="alert alert-warning">
+                      Bu test uchun urinishlar limiti yakunlangan.
+                    </div>
+                  {% else %}
+                    <form method="post">
+                      {% csrf_token %}
+                      {# GET→POST da xuddi shu savollar ketishini ta’minlovchi yashirin identifikatorlar #}
+                      <input type="hidden" name="question_ids" value="{{ quiz_view.question_ids_csv }}"/>
+
+                      {% for item in quiz_view.items %}
+                        {% with q=item.q choices=item.choices %}
+                        <div class="mb-4 p-3 border rounded">
+                          <div class="d-flex align-items-start">
+                            <strong class="me-2">{{ forloop.counter }}.</strong>
+                            <div>
+                              <div class="fw-semibold">{{ q.text|linebreaks }}</div>
+                              {% if q.image %}
+                                <img src="{{ q.image.url }}" class="img-fluid my-2" alt="question image">
+                              {% endif %}
+                              <div class="small text-muted">
+                                Ball: {{ q.points }} —
+                                {% if q.qtype == 'sc' %}Yagona tanlov{% elif q.qtype == 'mc' %}Bir nechta tanlov{% else %}Matnli javob{% endif %}
+                              </div>
+                            </div>
+                          </div>
+
+                          {% if q.qtype == 'sc' %}
+                            {% for c in choices %}
+                              <div class="form-check mt-1">
+                                <input class="form-check-input" type="radio"
+                                       name="q{{ q.id }}" id="q{{ q.id }}c{{ c.id }}"
+                                       value="{{ c.id }}">
+                                <label class="form-check-label" for="q{{ q.id }}c{{ c.id }}">{{ c.text }}</label>
+                              </div>
+                            {% endfor %}
+                          {% elif q.qtype == 'mc' %}
+                            {% for c in choices %}
+                              <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox"
+                                       name="q{{ q.id }}" id="q{{ q.id }}c{{ c.id }}"
+                                       value="{{ c.id }}">
+                                <label class="form-check-label" for="q{{ q.id }}c{{ c.id }}">{{ c.text }}</label>
+                              </div>
+                            {% endfor %}
+                          {% else %}
+                            <textarea class="form-control mt-2" rows="3"
+                                      name="q{{ q.id }}_text"
+                                      placeholder="Javobingizni yozing..."></textarea>
+                          {% endif %}
+
+                          {# ——— Natijani savol ostida ko‘rsatish (POSTdan keyin) ——— #}
+                          {% if quiz_result %}
+                            {% for d in quiz_result.details %}
+                              {% if d.question.id == q.id %}
+                                <div class="mt-2">
+                                  {% if d.qtype == 'txt' %}
+                                    <div class="small text-muted">Matnli javob avtomatik baholanmaydi.</div>
+                                  {% else %}
+                                    {% if d.is_correct %}
+                                      <span class="badge bg-success">To‘g‘ri</span>
+                                    {% else %}
+                                      <span class="badge bg-danger">Noto‘g‘ri</span>
+                                      {% if d.right %}
+                                        <div class="small mt-1"><strong>To‘g‘ri javob:</strong> {{ d.right.text }}</div>
+                                      {% elif d.right_ids %}
+                                        <div class="small mt-1"><strong>To‘g‘ri javoblar:</strong>
+                                          {% for ch in q.choices.all %}
+                                            {% if ch.id in d.right_ids %}
+                                              <span class="badge bg-light text-dark me-1">{{ ch.text }}</span>
+                                            {% endif %}
+                                          {% endfor %}
+                                        </div>
+                                      {% endif %}
+                                    {% endif %}
+                                    {% if q.explanation %}
+                                      <div class="small text-muted mt-1">{{ q.explanation|linebreaks }}</div>
+                                    {% endif %}
+                                  {% endif %}
+                                </div>
+                              {% endif %}
+                            {% endfor %}
+                          {% endif %}
+                        </div>
+                        {% endwith %}
+                      {% endfor %}
+
+                      <button type="submit" class="btn btn-primary">Testni topshirish</button>
+                    </form>
+
+                    {% if quiz_result %}
+                      <div class="alert alert-info mt-4">
+                        <strong>Natija:</strong>
+                        {{ quiz_result.points.gained }}/{{ quiz_result.points.total }} ball
+                        ({{ quiz_result.percent }}%)
+                        {% if lesson.test.pass_percent %}
+                          — Pass chegarasi: {{ lesson.test.pass_percent }}%
+                          {% if quiz_result.passed %}
+                            <span class="badge bg-success ms-2">O‘tdingiz</span>
+                          {% else %}
+                            <span class="badge bg-danger ms-2">O‘tmadingiz</span>
+                          {% endif %}
+                        {% endif %}
+
+                        {% if quiz_result.advice %}
+                          <hr class="my-2">
+                          <div><strong>Tavsiya:</strong> {{ quiz_result.advice|linebreaks }}</div>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  <p class="text-muted">Test mavjud emas.</p>
+                {% endif %}
+
+              {% endif %} {# ==== /KIND SWITCH ==== #}
+
+            {% endif %} {# lesson bor/yo‘q #}
+          </div>
+
+          <!-- Footer -->
+          <div class="p-3 border-top">
+            <h6 class="mb-2">About this course</h6>
+            <p class="mb-0 text-muted">{{ course.short_desc }}</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+{% endblock %}

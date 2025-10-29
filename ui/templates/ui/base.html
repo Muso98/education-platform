@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}eLEARNING — Elektron ta’lim platformasi{% endblock %}</title>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  {% block meta %}{% endblock %}
+
+  <!-- Favicon -->
+  <link href="{% static 'img/favicon.ico' %}" rel="icon">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Kutubxonalar -->
+  <link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
+  <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+
+  <!-- Bootstrap va asosiy uslublar -->
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <!-- Yuklanish animatsiyasi -->
+  <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Yuklanmoqda...</span>
+    </div>
+  </div>
+
+  <!-- Navigatsiya paneli -->
+  <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+    <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+      <h2 class="m-0 text-primary"><i class="fa fa-book me-3"></i>eLEARNING</h2>
+    </a>
+
+    <button class="navbar-toggler me-4" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <div class="navbar-nav ms-auto p-4 p-lg-0">
+        <a href="{% url 'home' %}" class="nav-item nav-link {% block nav_home_active %}{% endblock %}">Bosh sahifa</a>
+        <a href="{% url 'about' %}" class="nav-item nav-link {% block nav_about_active %}{% endblock %}">Biz haqimizda</a>
+        <a href="{% url 'courses' %}" class="nav-item nav-link {% block nav_courses_active %}{% endblock %}">Kurslar</a>
+        <a href="{% url 'library' %}" class="nav-item nav-link {% block nav_library_active %}{% endblock %}">Kutubxona</a>
+
+        <!-- Torrens testlar -->
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle {% block nav_torrens_active %}{% endblock %}" data-bs-toggle="dropdown">
+            Torrens testlar
+          </a>
+          <div class="dropdown-menu fade-down m-0">
+            <a href="{% url 'torrens_list' %}" class="dropdown-item">Barcha testlar</a>
+            <div class="dropdown-divider"></div>
+            {% if tests_preview %}
+              {% for t in tests_preview %}
+                <a href="{% url 'torrens_detail' t.slug %}" class="dropdown-item">{{ t.title }}</a>
+              {% empty %}
+                <span class="dropdown-item text-muted">Testlar mavjud emas</span>
+              {% endfor %}
+              <div class="dropdown-divider"></div>
+            {% endif %}
+            {% if request.user.is_staff %}
+              <a href="{% url 'torrens_create' %}" class="dropdown-item text-success fw-semibold">+ Yangi test yaratish</a>
+            {% endif %}
+          </div>
+        </li>
+
+        <!-- Boshqa sahifalar -->
+        <div class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle {% block nav_pages_active %}{% endblock %}" data-bs-toggle="dropdown">
+            Sahifalar
+          </a>
+          <div class="dropdown-menu fade-down m-0">
+            <a href="{% url 'team' %}" class="dropdown-item {% block nav_team_active %}{% endblock %}">Jamoamiz</a>
+            <a href="{% url 'testimonial' %}" class="dropdown-item {% block nav_testimonial_active %}{% endblock %}">Fikrlar</a>
+          </div>
+        </div>
+
+        <a href="{% url 'contact' %}" class="nav-item nav-link {% block nav_contact_active %}{% endblock %}">Aloqa</a>
+
+        <!-- Mobil foydalanuvchi menyusi -->
+        <div class="d-lg-none mt-3">
+          {% if user.is_authenticated %}
+            <span class="nav-link disabled">Salom, {{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}" class="mb-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-primary w-100">Chiqish</button>
+            </form>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 mb-2">Kirish</a>
+            <a href="{% url 'register' %}" class="btn btn-primary w-100">Ro‘yxatdan o‘tish</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Desktop uchun login/logout -->
+      <div class="d-none d-lg-flex align-items-center gap-3 pe-4">
+        {% if user.is_authenticated %}
+          <span class="text-muted">Salom, {{ user.username }}</span>
+          <form method="post" action="{% url 'logout' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary">Chiqish</button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-outline-primary">Kirish</a>
+          <a href="{% url 'register' %}" class="btn btn-primary">Ro‘yxatdan o‘tish</a>
+        {% endif %}
+        <a href="{% url 'courses' %}" class="btn btn-primary py-2 px-4">
+          Kurslarga o‘tish <i class="fa fa-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <!-- Footer -->
+  <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+    <div class="container py-5">
+      <div class="row g-5">
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-white mb-3">Tezkor havolalar</h4>
+          <a class="btn btn-link" href="{% url 'about' %}">Biz haqimizda</a>
+          <a class="btn btn-link" href="{% url 'contact' %}">Aloqa</a>
+          <a class="btn btn-link" href="#">Maxfiylik siyosati</a>
+          <a class="btn btn-link" href="#">Foydalanish shartlari</a>
+          <a class="btn btn-link" href="#">Yordam va FAQ</a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-white mb-3">Aloqa</h4>
+          <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>TATU, Toshkent, O‘zbekiston</p>
+          <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+998 (71) 238-64-00</p>
+          <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@tuit.uz</p>
+          <div class="d-flex pt-2">
+            <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-telegram"></i></a>
+            <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-facebook-f"></i></a>
+            <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-instagram"></i></a>
+            <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-white mb-3">Fotogalereya</h4>
+          <div class="row g-2 pt-2">
+            <div class="col-4"><img class="img-fluid bg-light p-1" src="{% static 'img/course-1.jpg' %}" alt=""></div>
+            <div class="col-4"><img class="img-fluid bg-light p-1" src="{% static 'img/course-2.jpg' %}" alt=""></div>
+            <div class="col-4"><img class="img-fluid bg-light p-1" src="{% static 'img/course-3.jpg' %}" alt=""></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-white mb-3">Yangiliklarga obuna</h4>
+          <p>So‘nggi yangiliklardan xabardor bo‘lish uchun emailingizni kiriting.</p>
+          <div class="position-relative mx-auto" style="max-width:400px;">
+            <input class="form-control border-0 w-100 py-3 ps-4 pe-5" type="email" placeholder="Email manzilingiz...">
+            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Yuborish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yuqoriga qaytish -->
+  <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+  <!-- JS -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'lib/wow/wow.min.js' %}"></script>
+  <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+  <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+  <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "ui/base.html" %}
+{% block title %}Register — eLEARNING{% endblock %}
+{% block nav_pages_active %}active{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+  <div class="container" style="max-width:560px;">
+    <h1 class="mb-4 text-center">Register</h1>
+    <form method="post" class="bg-white p-4 rounded shadow-sm">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      <button class="btn btn-primary w-100">Create account</button>
+    </form>
+    <p class="text-center mt-3">Allaqachon akkount bormi? <a href="{% url 'login' %}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

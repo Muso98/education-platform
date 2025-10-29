@@ -1,0 +1,34 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ test.title }} — Torrens{% endblock %}
+{% block nav_torrens_active %}active{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-2">{{ test.title }}</h2>
+  {% if test.description %}<p class="text-muted">{{ test.description|linebreaks }}</p>{% endif %}
+
+  <div class="mb-3">
+    <span class="badge bg-{{ test.is_published|yesno:'success,secondary' }}">
+      {{ test.is_published|yesno:"E'lon qilingan,Chop etilmagan" }}
+    </span>
+    {% if test.time_limit_minutes %}<span class="badge bg-info ms-2">{{ test.time_limit_minutes }} daqiqa</span>{% endif %}
+  </div>
+
+  <h5>Topshiriqlar</h5>
+  <ol class="mb-4">
+    {% for task in test.tasks.all %}
+      <li class="mb-2">
+        <div class="fw-semibold">{{ task.prompt|truncatechars:160 }}</div>
+        <small class="text-muted">Tur: {{ task.get_response_type_display }}</small>
+      </li>
+    {% empty %}
+      <li>Topshiriqlar hali qo‘shilmagan.</li>
+    {% endfor %}
+  </ol>
+
+  {% if test.is_published %}
+    <a class="btn btn-primary" href="{% url 'torrens_take' test.slug %}">Boshlash</a>
+  {% else %}
+    <div class="alert alert-warning">Bu test hali e'lon qilinmagan.</div>
+  {% endif %}
+</div>
+{% endblock %}
