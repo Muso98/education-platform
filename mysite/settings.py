@@ -173,13 +173,18 @@ CONTENT_SECURITY_POLICY = {
             "'unsafe-inline'",
             "https://cdn.jsdelivr.net",
             "https://fonts.googleapis.com",
+            "https://cdnjs.cloudflare.com",  # <— YANGI
+
         ),
+
 
         # Shriftlar (Google Fonts)
         "font-src": (
             "'self'",
             "https://fonts.gstatic.com",
             "data:",
+            "https://cdn.jsdelivr.net",  # <— YANGI (Bootstrap Icons .woff2 shu yerdan)
+            "https://cdnjs.cloudflare.com",
         ),
 
         # Rasmlar (local, data/blob va tashqi)
